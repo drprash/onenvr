@@ -13,3 +13,9 @@ retention_days: 7
 concatenation: true
 concatenation_time: "02:00"
 deletion_time: "01:00"
+
+discovery:
+  enabled: true
+  interval_minutes: 30
+  rtsp_probe_timeout: 3
+  onvif_timeout: 5

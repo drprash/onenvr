@@ -10,6 +10,7 @@ from datetime import datetime
 from flask import (Flask, send_from_directory, render_template_string,
                    abort, request, redirect, url_for, session, jsonify)
 from functools import wraps
+from onvif_discovery import ONVIFDiscovery
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +156,16 @@ video { width: 100%; border-radius: 6px; background: #000; max-height: 70vh; }
 .ll { display: block; text-align: center; margin-top: 12px; color: #388bfd;
       font-size: .78em; text-decoration: none; }
 .ll:hover { text-decoration: underline; }
+/* Discovery panel */
+.disc-table { width:100%; border-collapse:collapse; font-size:.82em; }
+.disc-table th { text-align:left; padding:7px 10px; font-size:.7em; color:#6e7681;
+                 font-weight:600; text-transform:uppercase; letter-spacing:.04em;
+                 border-bottom:1px solid #30363d; }
+.disc-table td { padding:8px 10px; border-bottom:1px solid #0d1117; vertical-align:middle; }
+.disc-table tr:last-child td { border-bottom:none; }
+.disc-inp { width:100%; padding:4px 8px; background:#0d1117; border:1px solid #30363d;
+            border-radius:4px; color:#e6edf3; font-size:.85em; }
+.disc-inp:disabled { opacity:.4; cursor:not-allowed; }
 /* Empty */
 .empty { text-align: center; color: #3d444d; padding: 36px 20px; font-size: .875em; }
 .empty svg { width: 44px; height: 44px; margin: 0 auto 10px; display: block; color: #21262d; }
@@ -312,6 +323,15 @@ _DASHBOARD = """
   </div>
   {% endif %}
 </div>
+<div class="card" style="margin-top:18px" id="disc-card">
+  <div class="card-h">
+    <h3>Camera Discovery</h3>
+    <button class="btn btn-b btn-sm" onclick="startScan()" id="scan-btn">Discover Cameras</button>
+  </div>
+  <div class="card-b" id="disc-body">
+    <p style="font-size:.82em;color:#6e7681">Click "Discover Cameras" to scan your network for ONVIF cameras.</p>
+  </div>
+</div>
 <script>
 (function(){
   function badge(cls,dot,text){return '<span class="badge '+cls+'">'+(dot?'<span class="dot"></span>':'')+text+'</span>';}
@@ -353,6 +373,98 @@ _DASHBOARD = """
     }).catch(function(){});
   }
   window.camAction=camAction;
+
+  var discCandidates = [];
+
+  function startScan() {
+    var btn = document.getElementById('scan-btn');
+    var body = document.getElementById('disc-body');
+    btn.disabled = true; btn.textContent = 'Scanning...';
+    body.innerHTML = '<p style="font-size:.82em;color:#6e7681">Scanning network (this takes 10-15 seconds)...</p>';
+    fetch('/api/discovery/scan', {method:'POST'})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        btn.disabled = false; btn.textContent = 'Discover Cameras';
+        if(data.status !== 'ok') { body.innerHTML = '<div class="alert alert-e">Scan failed: '+data.error+'</div>'; return; }
+        discCandidates = data.candidates;
+        renderDiscTable(data.candidates);
+      })
+      .catch(function(e){ btn.disabled=false; btn.textContent='Discover Cameras';
+        body.innerHTML = '<div class="alert alert-e">Scan error: '+e+'</div>'; });
+  }
+
+  function renderDiscTable(candidates) {
+    var body = document.getElementById('disc-body');
+    if(!candidates.length){ body.innerHTML='<div class="empty">No cameras found on network.</div>'; return; }
+    var rows = candidates.map(function(c, i){
+      var dis = c.already_configured ? 'style="opacity:.5"' : '';
+      var credDis = (!c.requires_auth || c.already_configured) ? 'disabled' : '';
+      var statusBadge = c.status === 'ok' ? '<span class="badge bg">No auth needed</span>'
+        : c.status === 'auth_required' ? '<span class="badge by">Auth required</span>'
+        : '<span class="badge br">'+c.status+'</span>';
+      return '<tr '+dis+' data-idx="'+i+'">'
+        +'<td>'+c.ip+'</td>'
+        +'<td>'+c.model+'</td>'
+        +'<td>'+statusBadge+'</td>'
+        +'<td><input class="disc-inp" id="usr'+i+'" placeholder="username" value="'+(c.username||'')+'" '+credDis+'></td>'
+        +'<td><input class="disc-inp" id="pwd'+i+'" type="password" placeholder="password" '+credDis+'></td>'
+        +'<td style="font-size:.75em;color:#7d8590;font-family:monospace;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+c.rtsp_url+'</td>'
+        +'<td id="val'+i+'">'+( c.status==='ok' ? '<span class="badge bg">Ready</span>' : '' )+'</td>'
+        +'</tr>';
+    }).join('');
+    body.innerHTML = '<table class="disc-table"><thead><tr>'
+      +'<th>IP</th><th>Model</th><th>Auth</th><th>Username</th><th>Password</th><th>RTSP URL</th><th>Status</th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table>'
+      +'<div class="btn-grp" style="margin-top:12px">'
+      +'<button class="btn btn-s" onclick="validateSelected()">Validate Selected</button>'
+      +'<button class="btn btn-p" id="add-btn" onclick="addValid()" disabled>Add Valid Cameras</button>'
+      +'</div>';
+  }
+
+  function validateSelected() {
+    var toValidate = discCandidates.map(function(c, i){
+      return {ip:c.ip, mac:c.mac, onvif_port:c.onvif_port,
+              username:document.getElementById('usr'+i) ? document.getElementById('usr'+i).value : '',
+              password:document.getElementById('pwd'+i) ? document.getElementById('pwd'+i).value : '',
+              rtsp_url:c.rtsp_url};
+    });
+    fetch('/api/discovery/validate', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(toValidate)})
+      .then(function(r){return r.json();})
+      .then(function(results){
+        var anyValid = false;
+        results.forEach(function(r, i){
+          var cell = document.getElementById('val'+i);
+          if(!cell) return;
+          if(r.valid){ cell.innerHTML='<span class="badge bg">Valid</span>'; anyValid=true;
+            discCandidates[i].validated_rtsp = r.rtsp_url;
+            discCandidates[i].validated = true;
+          } else { cell.innerHTML='<span class="badge br" title="'+r.error+'">Invalid</span>'; }
+        });
+        var addBtn = document.getElementById('add-btn');
+        if(addBtn) addBtn.disabled = !anyValid;
+      });
+  }
+
+  function addValid() {
+    var toAdd = discCandidates.filter(function(c){ return c.validated && !c.already_configured; })
+      .map(function(c){
+        return {name: c.name || c.ip.replace(/[.]/g,'_'),
+                rtsp_url: c.validated_rtsp || c.rtsp_url,
+                mac: c.mac, onvif_port: c.onvif_port,
+                username: c.username || '', password: c.password || '',
+                codec: 'copy', interval: 300};
+      });
+    if(!toAdd.length) return;
+    fetch('/api/discovery/add', {method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(toAdd)})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        var msg = 'Added: '+data.added.join(', ')+(data.skipped.length ? ' | Skipped: '+data.skipped.join(', ') : '');
+        document.getElementById('disc-body').innerHTML='<div class="alert alert-s">'+msg+'</div>';
+      });
+  }
+
   setInterval(updateDash,8000);
 })();
 </script>"""
@@ -659,6 +771,14 @@ _LOGIN_TPL = """
     {% endif %}
   </div>
 </div>"""
+
+
+def write_config_atomic(config: dict, config_path: str = CONFIG_PATH):
+    tmp = config_path + '.tmp'
+    with open(tmp, 'w') as f:
+        yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+    os.replace(tmp, config_path)
+    logger.info("Config written by discovery endpoint")
 
 
 # ── Main factory ─────────────────────────────────────────────────────────────
@@ -1099,6 +1219,115 @@ def create_web_server(nvr_system=None):
         public = {'login', 'logout', 'forgot_password', 'reset_password', 'favicon', 'static'}
         if request.endpoint not in public and 'authenticated' not in session:
             return redirect(url_for('login'))
+
+    # ── Discovery API ─────────────────────────────────────────────────────────
+    @app.route('/api/discovery/scan', methods=['POST'])
+    @login_required
+    def discovery_scan():
+        cfg = read_config()
+        disc_cfg = cfg.get('discovery') or {}
+        try:
+            disc = ONVIFDiscovery(
+                onvif_timeout=disc_cfg.get('onvif_timeout', 5),
+                rtsp_probe_timeout=disc_cfg.get('rtsp_probe_timeout', 3)
+            )
+            candidates = disc.scan()
+            existing_macs = {c.get('mac_address', '') for c in cfg.get('cameras', []) if c.get('mac_address')}
+            existing_urls = {c['rtsp_url'] for c in cfg.get('cameras', [])}
+            for c in candidates:
+                if c['mac'] in existing_macs or c['rtsp_url'] in existing_urls:
+                    c['already_configured'] = True
+                else:
+                    c['already_configured'] = False
+            return jsonify({'status': 'ok', 'candidates': candidates})
+        except Exception as e:
+            logger.error(f"Discovery scan failed: {e}")
+            return jsonify({'status': 'error', 'error': str(e)}), 500
+
+    @app.route('/api/discovery/validate', methods=['POST'])
+    @login_required
+    def discovery_validate():
+        cfg = read_config()
+        disc_cfg = cfg.get('discovery') or {}
+        items = request.get_json(force=True) or []
+        disc = ONVIFDiscovery(
+            onvif_timeout=disc_cfg.get('onvif_timeout', 5),
+            rtsp_probe_timeout=disc_cfg.get('rtsp_probe_timeout', 3)
+        )
+        results = []
+        for item in items:
+            try:
+                result = disc.validate_credential(
+                    ip=item['ip'],
+                    mac=item.get('mac', ''),
+                    onvif_port=item.get('onvif_port', 80),
+                    username=item.get('username', ''),
+                    password=item.get('password', ''),
+                    rtsp_url=item['rtsp_url']
+                )
+                result['name'] = item.get('name', item['ip'])
+                results.append(result)
+            except Exception as e:
+                results.append({'name': item.get('name', item['ip']),
+                                'valid': False, 'error': str(e), 'rtsp_url': ''})
+        return jsonify(results)
+
+    @app.route('/api/discovery/add', methods=['POST'])
+    @login_required
+    def discovery_add():
+        items = request.get_json(force=True) or []
+        cfg = read_config()
+        # Merge in any cameras already tracked by the live nvr_system
+        if nvr_system is not None and hasattr(nvr_system, 'config'):
+            live_cameras = nvr_system.config.get('cameras', [])
+            cfg_macs = {c.get('mac_address', '') for c in cfg.get('cameras', []) if c.get('mac_address')}
+            cfg_urls = {c.get('rtsp_url', '') for c in cfg.get('cameras', [])}
+            for cam in live_cameras:
+                mac = cam.get('mac_address', '')
+                url = cam.get('rtsp_url', '')
+                if (mac and mac not in cfg_macs) or (url and url not in cfg_urls):
+                    cfg.setdefault('cameras', []).append(cam)
+                    if mac:
+                        cfg_macs.add(mac)
+                    if url:
+                        cfg_urls.add(url)
+
+        existing_macs = {c.get('mac_address', '') for c in cfg['cameras'] if c.get('mac_address')}
+        existing_urls = {c['rtsp_url'] for c in cfg['cameras']}
+
+        added = []
+        skipped = []
+        for item in items:
+            mac = item.get('mac', '')
+            rtsp_url = item.get('rtsp_url', '')
+            if mac and mac in existing_macs:
+                skipped.append(item['name'])
+                continue
+            if rtsp_url in existing_urls:
+                skipped.append(item['name'])
+                continue
+            import re as _re
+            safe_name = _re.sub(r'[^a-zA-Z0-9_-]', '', str(item.get('name', '')))
+            if not safe_name:
+                safe_name = item.get('ip', 'camera').replace('.', '_')
+            cfg['cameras'].append({
+                'name': safe_name,
+                'rtsp_url': rtsp_url,
+                'mac_address': mac,
+                'onvif_port': item.get('onvif_port', 80),
+                'username': item.get('username', ''),
+                'password': item.get('password', ''),
+                'codec': item.get('codec', 'copy'),
+                'interval': item.get('interval', 300),
+            })
+            added.append(item['name'])
+            if mac:
+                existing_macs.add(mac)
+            existing_urls.add(rtsp_url)
+
+        if added:
+            write_config_atomic(cfg)
+        return jsonify({'added': added, 'skipped': skipped})
 
     logger.info(f"Web interface ready – auth stored in {auth_file}")
     return app

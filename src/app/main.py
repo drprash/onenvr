@@ -8,6 +8,7 @@ from recorder import StreamRecorder
 from video_manager import VideoManager
 from web_interface import create_web_server
 from config_watcher import ConfigWatcher
+from discovery_scheduler import DiscoveryScheduler
 import logging
 import shutil
 
@@ -25,6 +26,7 @@ class NVRSystem:
         self.config_watcher = None
         self.web_app = None
         self._lock = threading.RLock()  # For thread-safe config updates
+        self.discovery_scheduler = None
 
         self.setup_recorders()
         self.setup_schedules()
@@ -93,6 +95,33 @@ class NVRSystem:
         # Health checks and maintenance
         schedule.every(2).minutes.do(self.health_check)
         schedule.every(5).minutes.do(self.disk_space_check)
+
+        # Discovery rediscovery schedule
+        disc_cfg = self.config.get('discovery')
+        if disc_cfg and disc_cfg.get('enabled'):
+            if self.discovery_scheduler is None:
+                self.discovery_scheduler = DiscoveryScheduler(
+                    config_ref=self.config,
+                    lock=self._lock,
+                    discovery_config=disc_cfg
+                )
+            schedule.every(disc_cfg['interval_minutes']).minutes.do(
+                self.discovery_scheduler.run_rediscovery
+            )
+            self.logger.info(
+                f"Scheduled discovery rediscovery every {disc_cfg['interval_minutes']} minutes"
+            )
+            # Warn if multicast may be unreachable in Docker
+            import socket as _socket
+            try:
+                s = _socket.socket(_socket.AF_INET, _socket.SOCK_DGRAM)
+                s.connect(('239.255.255.250', 3702))
+                s.close()
+            except OSError:
+                self.logger.warning(
+                    "Discovery enabled but multicast may be unreachable. "
+                    "Run container with --network host or a macvlan network."
+                )
 
         self.logger.debug("Schedule setup complete")
 

@@ -20,6 +20,8 @@ A lightweight, self-hosted Network Video Recorder (NVR) designed to run on modes
 - **Retention cleanup** — old recordings are deleted automatically based on configured retention days
 - **Dark web UI** — dashboard, recordings browser with inline video player, camera management, and settings
 - **Login with password reset** — credentials persist across container rebuilds; locked-out reset is file-based (admin access only for security reasons)
+- **ONVIF camera discovery** — scan your network for cameras from the dashboard; discovered cameras can be validated and added in one click
+- **Automatic IP rediscovery** — periodic job detects when a camera's IP changes and updates config automatically using a socket → ARP → mDNS resolution cascade
 
 ## Deployment
 
@@ -72,6 +74,10 @@ cameras:
     rtsp_url: rtsp://user:password@192.168.1.10:554/stream1
     codec: copy
     interval: 300
+    mac_address: "AA:BB:CC:DD:EE:FF"   # optional, enables IP rediscovery
+    onvif_port: 80                      # optional
+    username: user                      # optional
+    password: password                  # optional
 
   - name: backyard
     rtsp_url: rtsp://192.168.1.11:554/live
@@ -82,6 +88,12 @@ retention_days: 7
 concatenation: true
 concatenation_time: "02:00"
 deletion_time: "01:00"
+
+discovery:
+  enabled: true
+  interval_minutes: 30
+  rtsp_probe_timeout: 3
+  onvif_timeout: 5
 ```
 
 ### Options
@@ -92,10 +104,18 @@ deletion_time: "01:00"
 | `cameras[].rtsp_url` | — | Full RTSP URL including credentials if required. |
 | `cameras[].codec` | `copy` | FFmpeg codec. `copy` (recommended) passes through the stream without re-encoding. Any FFmpeg-supported codec works. |
 | `cameras[].interval` | `300` | Segment length in seconds (minimum 60). |
+| `cameras[].mac_address` | `""` | Camera MAC address. Enables automatic IP rediscovery when a camera's IP changes. |
+| `cameras[].onvif_port` | `80` | ONVIF device management port. |
+| `cameras[].username` | `""` | Camera username. Used for RTSP URL construction during rediscovery. |
+| `cameras[].password` | `""` | Camera password. Used for RTSP URL construction during rediscovery. |
 | `retention_days` | `7` | Recordings older than this are deleted by the daily cleanup job. |
 | `concatenation` | `true` | Merge previous-day segments into a single file at `concatenation_time`. |
 | `concatenation_time` | `02:00` | Time to run daily concatenation (24-hour HH:MM, local timezone). |
 | `deletion_time` | `01:00` | Time to run daily cleanup (24-hour HH:MM, local timezone). |
+| `discovery.enabled` | `false` | Enable ONVIF discovery and periodic IP rediscovery. |
+| `discovery.interval_minutes` | `30` | How often to run the IP rediscovery job. |
+| `discovery.rtsp_probe_timeout` | `3` | Seconds to wait when probing an RTSP stream. |
+| `discovery.onvif_timeout` | `5` | Seconds to wait for ONVIF device responses during a scan. |
 
 Set the `TZ` environment variable to run scheduled jobs in your local timezone (e.g. `TZ=America/New_York`).
 
@@ -105,12 +125,24 @@ Access the UI at `http://<host>:80` (or whichever port you mapped).
 
 | Page | Path | Description |
 |------|------|-------------|
-| Dashboard | `/` | Camera health, disk usage, per-camera start/stop |
+| Dashboard | `/` | Camera health, disk usage, per-camera start/stop, camera discovery |
 | Recordings | `/recordings` | Browse footage by camera → date → file; inline video player |
 | Cameras | `/cameras` | Add, edit, and delete camera configurations |
 | Settings | `/settings` | Retention, concatenation schedule, change password |
 
 The dashboard polls for live status every 8 seconds and updates camera badges and buttons without a page reload.
+
+## Camera Discovery
+
+The dashboard includes a **Camera Discovery** panel that uses ONVIF WS-Discovery to find cameras on your local network.
+
+1. Click **Discover Cameras** — the scan takes 10–15 seconds.
+2. Cameras requiring authentication show username/password fields. Enter credentials and click **Validate Selected**.
+3. Click **Add Valid Cameras** to add them to your config. Cameras already configured are detected and skipped.
+
+When `discovery.enabled: true`, OneNVR also runs a background job every `interval_minutes` that checks each configured camera's IP. If a camera has moved (e.g. DHCP reassignment), it resolves the new IP via a socket → ARP → mDNS cascade and updates `config.yaml` automatically.
+
+> **Docker networking note:** WS-Discovery uses multicast (UDP 3702). If running in bridge network mode, discovery may not reach cameras. Use `--network host` or a macvlan network for reliable scanning.
 
 ## Authentication
 
