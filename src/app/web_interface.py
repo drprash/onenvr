@@ -19,86 +19,129 @@ CONFIG_DIR = '/config'
 
 # ── CSS ──────────────────────────────────────────────────────────────────────
 _CSS = """
+:root {
+  --bg:#0d1117; --bg-card:#161b22; --bg-hover:#1c2128;
+  --border:#30363d; --border-subtle:#21262d;
+  --text:#e6edf3; --text-body:#cdd9e5; --text-muted:#7d8590;
+  --text-dim:#6e7681; --text-faint:#3d444d;
+  --accent:#388bfd; --accent-hover:#58a6ff;
+  --green:#3fb950; --red:#f85149; --yellow:#d29922;
+  --green-bg:#12261e; --red-bg:#2d1217; --yellow-bg:#272115; --gray-bg:#161b22;
+  --row-hover:rgba(28,33,40,.27);
+  --btn-d-border:rgba(110,39,35,.3); --btn-d-hover:rgba(45,18,23,.27);
+  --alert-e-bg:rgba(45,18,23,.2); --alert-e-border:rgba(110,39,35,.27);
+  --alert-s-bg:rgba(18,38,30,.2); --alert-s-border:rgba(46,160,67,.27);
+  --focus-ring:rgba(56,139,253,.1);
+}
+[data-theme="light"] {
+  --bg:#f6f8fa; --bg-card:#ffffff; --bg-hover:#f3f4f6;
+  --border:#d0d7de; --border-subtle:#d0d7de;
+  --text:#1f2328; --text-body:#24292f; --text-muted:#57606a;
+  --text-dim:#6e7781; --text-faint:#6e7781;
+  --accent:#0969da; --accent-hover:#0969da;
+  --green:#1a7f37; --red:#cf222e; --yellow:#9a6700;
+  --green-bg:#dafbe1; --red-bg:#ffebe9; --yellow-bg:#fff8c5; --gray-bg:#f6f8fa;
+  --row-hover:rgba(208,215,222,.2);
+  --btn-d-border:rgba(207,34,46,.25); --btn-d-hover:rgba(255,235,233,.6);
+  --alert-e-bg:rgba(255,235,233,.5); --alert-e-border:rgba(207,34,46,.25);
+  --alert-s-bg:rgba(218,251,225,.5); --alert-s-border:rgba(26,127,55,.25);
+  --focus-ring:rgba(9,105,218,.1);
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117;
-       color: #e6edf3; min-height: 100vh; display: flex; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg);
+       color: var(--text); min-height: 100vh; display: flex; }
+/* Mobile header */
+.mobile-header { display: none; align-items: center; justify-content: space-between;
+  position: fixed; top: 0; left: 0; right: 0; height: 50px;
+  background: var(--bg-card); border-bottom: 1px solid var(--border);
+  padding: 0 14px; z-index: 8; }
+.mobile-header h1 { font-size: 1.05em; color: var(--accent); font-weight: 700; letter-spacing: -.02em; }
+.hamburger { background: none; border: none; cursor: pointer; color: var(--text);
+             padding: 6px; border-radius: 6px; display: flex; align-items: center; }
+.hamburger:hover { background: var(--bg-hover); }
+/* Drawer backdrop */
+.drawer-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 9; }
 /* Sidebar */
-.sb { width: 220px; background: #161b22; border-right: 1px solid #30363d;
+.sb { width: 220px; background: var(--bg-card); border-right: 1px solid var(--border);
       display: flex; flex-direction: column; position: fixed; height: 100vh; z-index: 10; }
-.sb-logo { padding: 18px 16px; border-bottom: 1px solid #30363d; }
-.sb-logo h1 { font-size: 1.2em; color: #388bfd; font-weight: 700; letter-spacing: -.02em; }
-.sb-logo p { font-size: .68em; color: #6e7681; margin-top: 2px; }
+.sb-logo { padding: 18px 16px; border-bottom: 1px solid var(--border); }
+.sb-logo h1 { font-size: 1.2em; color: var(--accent); font-weight: 700; letter-spacing: -.02em; }
+.sb-logo p { font-size: .68em; color: var(--text-dim); margin-top: 2px; }
 .sb-nav { flex: 1; padding: 10px 0; overflow-y: auto; }
-.sb-sec { padding: 7px 14px 3px; font-size: .63em; color: #3d444d;
+.sb-sec { padding: 7px 14px 3px; font-size: .63em; color: var(--text-faint);
           text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
 .sb-nav a { display: flex; align-items: center; gap: 9px; padding: 8px 12px;
-            margin: 1px 6px; border-radius: 6px; color: #7d8590; text-decoration: none;
+            margin: 1px 6px; border-radius: 6px; color: var(--text-muted); text-decoration: none;
             font-size: .85em; transition: all .1s; }
-.sb-nav a:hover { color: #cdd9e5; background: #1c2128; }
-.sb-nav a.active { color: #e6edf3; background: #1c2128; }
+.sb-nav a:hover { color: var(--text-body); background: var(--bg-hover); }
+.sb-nav a.active { color: var(--text); background: var(--bg-hover); }
 .sb-nav a svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.75; }
-.sb-foot { padding: 10px; border-top: 1px solid #30363d; }
-.sb-foot a { display: flex; align-items: center; gap: 8px; color: #6e7681; text-decoration: none;
-             font-size: .8em; padding: 7px 10px; border-radius: 6px; }
-.sb-foot a:hover { color: #7d8590; background: #1c2128; }
+.sb-foot { padding: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 4px; }
+.sb-foot a { display: flex; align-items: center; gap: 8px; color: var(--text-dim); text-decoration: none;
+             font-size: .8em; padding: 7px 10px; border-radius: 6px; flex: 1; }
+.sb-foot a:hover { color: var(--text-muted); background: var(--bg-hover); }
+.theme-btn { background: none; border: none; cursor: pointer; color: var(--text-dim);
+             font-size: .95em; padding: 7px 8px; border-radius: 6px; line-height: 1; flex-shrink: 0; }
+.theme-btn:hover { color: var(--text-muted); background: var(--bg-hover); }
 /* Main */
 .main { margin-left: 220px; flex: 1; padding: 26px 30px; }
 /* Page header */
 .ph { margin-bottom: 22px; display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.ph-l h2 { font-size: 1.35em; font-weight: 600; color: #e6edf3; letter-spacing: -.02em; }
-.ph-l p { color: #6e7681; font-size: .82em; margin-top: 3px; }
+.ph-l h2 { font-size: 1.35em; font-weight: 600; color: var(--text); letter-spacing: -.02em; }
+.ph-l p { color: var(--text-dim); font-size: .82em; margin-top: 3px; }
 /* Stats row */
 .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
          gap: 12px; margin-bottom: 22px; }
-.stat { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 15px; }
-.stat-l { font-size: .72em; color: #7d8590; text-transform: uppercase;
+.stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 15px; }
+.stat-l { font-size: .72em; color: var(--text-muted); text-transform: uppercase;
           letter-spacing: .05em; font-weight: 600; margin-bottom: 7px; }
-.stat-v { font-size: 1.6em; font-weight: 700; color: #e6edf3; }
-.stat-s { font-size: .72em; color: #6e7681; margin-top: 2px; }
+.stat-v { font-size: 1.6em; font-weight: 700; color: var(--text); }
+.stat-s { font-size: .72em; color: var(--text-dim); margin-top: 2px; }
 /* Cards */
-.card { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
         margin-bottom: 18px; overflow: hidden; }
-.card-h { padding: 12px 16px; border-bottom: 1px solid #30363d;
+.card-h { padding: 12px 16px; border-bottom: 1px solid var(--border);
           display: flex; align-items: center; justify-content: space-between; }
-.card-h h3 { font-size: .78em; font-weight: 600; color: #7d8590;
+.card-h h3 { font-size: .78em; font-weight: 600; color: var(--text-muted);
              text-transform: uppercase; letter-spacing: .05em; }
 .card-b { padding: 16px; }
 /* Table */
+.tbl-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
-th { text-align: left; padding: 9px 14px; font-size: .72em; color: #6e7681;
+th { text-align: left; padding: 9px 14px; font-size: .72em; color: var(--text-dim);
      font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
-     border-bottom: 1px solid #30363d; }
-td { padding: 11px 14px; font-size: .85em; border-bottom: 1px solid #0d1117;
-     color: #cdd9e5; vertical-align: middle; }
+     border-bottom: 1px solid var(--border); }
+td { padding: 11px 14px; font-size: .85em; border-bottom: 1px solid var(--bg);
+     color: var(--text-body); vertical-align: middle; }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: #1c212844; }
+tr:hover td { background: var(--row-hover); }
 /* Badges */
 .badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
          border-radius: 20px; font-size: .72em; font-weight: 500; white-space: nowrap; }
-.bg { background: #12261e; color: #3fb950; }
-.br { background: #2d1217; color: #f85149; }
-.by { background: #272115; color: #d29922; }
-.bgr { background: #161b22; color: #6e7681; border: 1px solid #30363d; }
+.bg { background: var(--green-bg); color: var(--green); }
+.br { background: var(--red-bg); color: var(--red); }
+.by { background: var(--yellow-bg); color: var(--yellow); }
+.bgr { background: var(--gray-bg); color: var(--text-dim); border: 1px solid var(--border); }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
 /* Disk bar */
-.bar-wrap { background: #0d1117; border-radius: 4px; height: 7px; overflow: hidden; margin-top: 8px; }
+.bar-wrap { background: var(--bg); border-radius: 4px; height: 7px; overflow: hidden; margin-top: 8px; }
 .bar { height: 100%; border-radius: 4px; transition: width .3s; }
 .bar-g { background: linear-gradient(90deg, #3fb950, #2ea043); }
 .bar-y { background: linear-gradient(90deg, #d29922, #b08800); }
 .bar-r { background: linear-gradient(90deg, #f85149, #da3633); }
 /* Forms */
 .fg { margin-bottom: 16px; }
-.fg label { display: block; font-size: .8em; color: #7d8590; margin-bottom: 5px; font-weight: 500; }
+.fg label { display: block; font-size: .8em; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
 .fg input[type=text], .fg input[type=password], .fg input[type=number],
-.fg select, .fg textarea { width: 100%; padding: 7px 11px; background: #0d1117;
-  border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: .875em; outline: none; }
+.fg select, .fg textarea { width: 100%; padding: 7px 11px; background: var(--bg);
+  border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: .875em; outline: none; }
 .fg input:focus, .fg select:focus, .fg textarea:focus
-  { border-color: #388bfd; box-shadow: 0 0 0 3px #388bfd1a; }
-.fhint { font-size: .73em; color: #6e7681; margin-top: 4px; }
+  { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
+.fhint { font-size: .73em; color: var(--text-dim); margin-top: 4px; }
 .fr { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .cb { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-.cb input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: #388bfd; }
-.cb label { margin: 0; font-size: .875em; color: #cdd9e5; cursor: pointer; }
+.cb input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent); }
+.cb label { margin: 0; font-size: .875em; color: var(--text-body); cursor: pointer; }
 /* Buttons */
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 15px;
        border-radius: 6px; font-size: .85em; font-weight: 500; cursor: pointer;
@@ -107,107 +150,152 @@ tr:hover td { background: #1c212844; }
 .btn-p:hover { background: #2ea043; }
 .btn-b { background: #1f6feb; border-color: #388bfd; color: #fff; }
 .btn-b:hover { background: #388bfd; }
-.btn-s { background: transparent; border-color: #30363d; color: #cdd9e5; }
-.btn-s:hover { background: #1c2128; border-color: #6e7681; }
-.btn-d { background: transparent; border-color: #6e27234d; color: #f85149; }
-.btn-d:hover { background: #2d121744; border-color: #f85149; }
+.btn-s { background: transparent; border-color: var(--border); color: var(--text-body); }
+.btn-s:hover { background: var(--bg-hover); border-color: var(--text-dim); }
+.btn-d { background: transparent; border-color: var(--btn-d-border); color: var(--red); }
+.btn-d:hover { background: var(--btn-d-hover); border-color: var(--red); }
 .btn-sm { padding: 4px 10px; font-size: .78em; }
 .btn-grp { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
 /* Alerts */
 .alert { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: .85em; }
-.alert-e { background: #2d121733; border: 1px solid #6e272344; color: #f85149; }
-.alert-s { background: #12261e33; border: 1px solid #2ea04344; color: #3fb950; }
+.alert-e { background: var(--alert-e-bg); border: 1px solid var(--alert-e-border); color: var(--red); }
+.alert-s { background: var(--alert-s-bg); border: 1px solid var(--alert-s-border); color: var(--green); }
 /* Breadcrumb */
-.bc { display: flex; align-items: center; gap: 5px; font-size: .78em; color: #6e7681;
+.bc { display: flex; align-items: center; gap: 5px; font-size: .78em; color: var(--text-dim);
       margin-bottom: 16px; flex-wrap: wrap; }
-.bc a { color: #388bfd; text-decoration: none; }
+.bc a { color: var(--accent); text-decoration: none; }
 .bc a:hover { text-decoration: underline; }
 /* Recordings */
 .date-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 9px; }
-.date-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+.date-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
              padding: 13px; text-align: center; text-decoration: none;
-             color: #7d8590; font-size: .82em; transition: all .1s; }
-.date-card:hover { border-color: #388bfd; color: #388bfd; }
+             color: var(--text-muted); font-size: .82em; transition: all .1s; }
+.date-card:hover { border-color: var(--accent); color: var(--accent); }
 .vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 13px; }
-.vc { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+.vc { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
       padding: 14px; text-decoration: none; color: inherit; display: block; transition: all .1s; }
-.vc:hover { border-color: #388bfd; transform: translateY(-1px); }
-.vc-t { font-weight: 600; color: #e6edf3; margin-bottom: 4px; font-size: .9em; }
-.vc-s { font-size: .78em; color: #388bfd; margin-bottom: 3px; }
-.vc-f { font-size: .7em; color: #3d444d; font-family: monospace; }
+.vc:hover { border-color: var(--accent); transform: translateY(-1px); }
+.vc-t { font-weight: 600; color: var(--text); margin-bottom: 4px; font-size: .9em; }
+.vc-s { font-size: .78em; color: var(--accent); margin-bottom: 3px; }
+.vc-f { font-size: .7em; color: var(--text-faint); font-family: monospace; }
 .cl a { display: flex; align-items: center; gap: 10px; padding: 11px 14px;
-        background: #161b22; border: 1px solid #30363d; border-radius: 8px;
-        margin-bottom: 7px; text-decoration: none; color: #388bfd; font-size: .9em; transition: all .1s; }
-.cl a:hover { border-color: #388bfd; color: #58a6ff; }
-.cl a svg { width: 16px; height: 16px; color: #6e7681; flex-shrink: 0; }
+        background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+        margin-bottom: 7px; text-decoration: none; color: var(--accent); font-size: .9em; transition: all .1s; }
+.cl a:hover { border-color: var(--accent); color: var(--accent-hover); }
+.cl a svg { width: 16px; height: 16px; color: var(--text-dim); flex-shrink: 0; }
 /* Video */
 video { width: 100%; border-radius: 6px; background: #000; max-height: 70vh; }
 /* Login */
 .lw { display: flex; justify-content: center; align-items: center;
-      min-height: 100vh; width: 100%; background: #0d1117; }
-.lb { width: 360px; background: #161b22; border: 1px solid #30363d;
-      border-radius: 12px; padding: 30px; }
-.lb h1 { color: #388bfd; font-size: 1.5em; text-align: center;
+      min-height: 100vh; width: 100%; background: var(--bg); }
+.lb { width: 100%; max-width: 360px; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 30px; margin: 16px; }
+.lb h1 { color: var(--accent); font-size: 1.5em; text-align: center;
          margin-bottom: 4px; font-weight: 700; }
-.lb .sub { color: #6e7681; text-align: center; font-size: .78em; margin-bottom: 22px; }
+.lb .sub { color: var(--text-dim); text-align: center; font-size: .78em; margin-bottom: 22px; }
 .lb .btn { width: 100%; justify-content: center; margin-top: 6px; }
 .lb .fg input { width: 100%; }
-.ll { display: block; text-align: center; margin-top: 12px; color: #388bfd;
+.ll { display: block; text-align: center; margin-top: 12px; color: var(--accent);
       font-size: .78em; text-decoration: none; }
 .ll:hover { text-decoration: underline; }
 /* Empty */
-.empty { text-align: center; color: #3d444d; padding: 36px 20px; font-size: .875em; }
-.empty svg { width: 44px; height: 44px; margin: 0 auto 10px; display: block; color: #21262d; }
+.empty { text-align: center; color: var(--text-faint); padding: 36px 20px; font-size: .875em; }
+.empty svg { width: 44px; height: 44px; margin: 0 auto 10px; display: block; color: var(--border-subtle); }
 /* Divider */
-.div { border: none; border-top: 1px solid #30363d; margin: 18px 0; }
+.div { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
 /* Camera status row for dashboard */
-.cam-row td:first-child { font-weight: 500; color: #e6edf3; }
+.cam-row td:first-child { font-weight: 500; color: var(--text); }
+/* Utility */
+.text-green { color: var(--green); }
+.text-red { color: var(--red); }
+.text-yellow { color: var(--yellow); }
 @media (max-width: 720px) {
-  .sb { width: 54px; }
-  .sb-logo h1, .sb-logo p, .sb-nav a span, .sb-sec, .sb-foot span { display: none; }
-  .main { margin-left: 54px; padding: 14px; }
+  .mobile-header { display: flex; }
+  .sb { transform: translateX(-220px); transition: transform .25s ease; z-index: 100; }
+  .drawer-open .sb { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,.4); }
+  .drawer-open .drawer-backdrop { display: block; }
+  .sb-nav a { min-height: 44px; }
+  .main { margin-left: 0; padding: 14px; padding-top: 64px; }
   .fr { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
 """
 
 # ── Base layout template ──────────────────────────────────────────────────────
+_FOUC_SCRIPT = "<script>(function(){var t=localStorage.getItem('onenvr-theme')||'auto';document.documentElement.dataset.theme=t==='auto'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;})()</script>"
+
 _BASE = """<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ title }} – OneNVR</title><style>""" + _CSS + """</style></head>
+<title>{{ title }} – OneNVR</title>""" + _FOUC_SCRIPT + """<style>""" + _CSS + """</style></head>
 <body>
+<div class="mobile-header">
+  <button class="hamburger" onclick="toggleDrawer()" aria-label="Open menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="20" height="20" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+  <h1>OneNVR</h1>
+  <div style="width:32px"></div>
+</div>
+<div class="drawer-backdrop" onclick="closeDrawer()"></div>
 <nav class="sb">
   <div class="sb-logo"><h1>OneNVR</h1><p>Network Video Recorder</p></div>
   <div class="sb-nav">
     <div class="sb-sec">Monitor</div>
-    <a href="/" class="{{ 'active' if active=='dashboard' else '' }}">
+    <a href="/" class="{{ 'active' if active=='dashboard' else '' }}" onclick="closeDrawer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
       <span>Dashboard</span></a>
-    <a href="/recordings" class="{{ 'active' if active=='recordings' else '' }}">
+    <a href="/recordings" class="{{ 'active' if active=='recordings' else '' }}" onclick="closeDrawer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
       <span>Recordings</span></a>
     <div class="sb-sec">Configure</div>
-    <a href="/cameras" class="{{ 'active' if active=='cameras' else '' }}">
+    <a href="/cameras" class="{{ 'active' if active=='cameras' else '' }}" onclick="closeDrawer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
       <span>Cameras</span></a>
-    <a href="/settings" class="{{ 'active' if active=='settings' else '' }}">
+    <a href="/settings" class="{{ 'active' if active=='settings' else '' }}" onclick="closeDrawer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
       <span>Settings</span></a>
   </div>
   <div class="sb-foot">
-    <a href="/logout">
+    <button class="theme-btn" id="theme-btn" onclick="cycleTheme()" title="Toggle theme">◐</button>
+    <a href="/logout" onclick="closeDrawer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       <span>Logout</span></a>
   </div>
 </nav>
 <main class="main">{{ body | safe }}</main>
+<script>
+(function(){
+  function openDrawer(){document.body.classList.add('drawer-open');}
+  function closeDrawer(){document.body.classList.remove('drawer-open');}
+  window.openDrawer=openDrawer;
+  window.closeDrawer=closeDrawer;
+  window.toggleDrawer=function(){document.body.classList.contains('drawer-open')?closeDrawer():openDrawer();};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeDrawer();});
+})();
+(function(){
+  var KEY='onenvr-theme',ORDER=['auto','light','dark'],ICONS={auto:'◐',light:'☀',dark:'☾'};
+  function apply(t){
+    document.documentElement.dataset.theme=t==='auto'?(window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'):t;
+  }
+  function updateBtn(t){var b=document.getElementById('theme-btn');if(b){b.textContent=ICONS[t];b.title='Theme: '+t;}}
+  window.cycleTheme=function(){
+    var t=localStorage.getItem(KEY)||'auto';
+    var n=ORDER[(ORDER.indexOf(t)+1)%ORDER.length];
+    localStorage.setItem(KEY,n);apply(n);updateBtn(n);
+  };
+  var saved=localStorage.getItem(KEY)||'auto';
+  updateBtn(saved);
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change',function(){
+    if((localStorage.getItem(KEY)||'auto')==='auto')apply('auto');
+  });
+})();
+</script>
 </body></html>"""
 
 _LOGIN_BASE = """<!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ title }} – OneNVR</title><style>""" + _CSS + """</style></head>
+<title>{{ title }} – OneNVR</title>""" + _FOUC_SCRIPT + """<style>""" + _CSS + """</style></head>
 <body>{{ body | safe }}</body></html>"""
 
 
@@ -237,12 +325,12 @@ _DASHBOARD = """
   </div>
   <div class="stat">
     <div class="stat-l">Recording</div>
-    <div class="stat-v" id="stat-healthy" style="color:{{ '#3fb950' if healthy==total and total>0 else ('#f85149' if healthy==0 and total>0 else '#e6edf3') }}">{{ healthy }}</div>
+    <div class="stat-v {{ 'text-green' if healthy==total and total>0 else ('text-red' if healthy==0 and total>0 else '') }}" id="stat-healthy" data-total="{{ total }}">{{ healthy }}</div>
     <div class="stat-s">of {{ total }} healthy</div>
   </div>
   <div class="stat">
     <div class="stat-l">Disk Used</div>
-    <div class="stat-v" style="color:{{ '#f85149' if disk_pct>90 else ('#d29922' if disk_pct>75 else '#e6edf3') }}">{{ disk_pct }}%</div>
+    <div class="stat-v {{ 'text-red' if disk_pct>90 else ('text-yellow' if disk_pct>75 else '') }}">{{ disk_pct }}%</div>
     <div class="stat-s">{{ disk_free }}GB free</div>
   </div>
   <div class="stat">
@@ -253,7 +341,7 @@ _DASHBOARD = """
 </div>
 
 <div class="card">
-  <div class="card-h"><h3>Disk Usage</h3><span style="font-size:.78em;color:#6e7681">{{ disk_used }}GB / {{ disk_total }}GB</span></div>
+  <div class="card-h"><h3>Disk Usage</h3><span style="font-size:.78em;color:var(--text-dim)">{{ disk_used }}GB / {{ disk_total }}GB</span></div>
   <div class="card-b">
     <div class="bar-wrap">
       <div class="bar {{ 'bar-r' if disk_pct>90 else ('bar-y' if disk_pct>75 else 'bar-g') }}" style="width:{{ disk_pct }}%"></div>
@@ -267,7 +355,7 @@ _DASHBOARD = """
     <a href="/cameras" class="btn btn-s btn-sm">Manage Cameras</a>
   </div>
   {% if cameras %}
-  <table>
+  <div class="tbl-wrap"><table>
     <thead><tr>
       <th>Camera</th><th>Status</th><th>Process</th><th>Reachable</th><th>Recent File</th><th>Actions</th>
     </tr></thead>
@@ -304,11 +392,11 @@ _DASHBOARD = """
     </tr>
     {% endfor %}
     </tbody>
-  </table>
+  </table></div>
   {% else %}
   <div class="empty">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-    No cameras configured. <a href="/cameras/add" style="color:#388bfd">Add a camera</a> to get started.
+    No cameras configured. <a href="/cameras/add" style="color:var(--accent)">Add a camera</a> to get started.
   </div>
   {% endif %}
 </div>
@@ -349,7 +437,11 @@ _DASHBOARD = """
         a.appendChild(b);
       });
       var h=document.getElementById('stat-healthy');
-      if(h)h.textContent=healthy;
+      if(h){
+        h.textContent=healthy;
+        var tot=(data.cameras||[]).length;
+        h.className='stat-v '+(healthy===tot&&tot>0?'text-green':(healthy===0&&tot>0?'text-red':''));
+      }
     }).catch(function(){});
   }
   window.camAction=camAction;
@@ -367,15 +459,15 @@ _CAM_LIST = """
 <div class="card">
   <div class="card-h"><h3>Configured Cameras</h3></div>
   {% if cameras %}
-  <table>
+  <div class="tbl-wrap"><table>
     <thead><tr>
       <th>Name</th><th>RTSP URL</th><th>Codec</th><th>Interval</th><th>Status</th><th>Actions</th>
     </tr></thead>
     <tbody>
     {% for cam in cameras %}
     <tr>
-      <td style="font-weight:500;color:#e6edf3">{{ cam.name }}</td>
-      <td style="font-family:monospace;font-size:.8em;color:#7d8590;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
+      <td style="font-weight:500;color:var(--text)">{{ cam.name }}</td>
+      <td style="font-family:monospace;font-size:.8em;color:var(--text-muted);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"
           title="{{ cam.rtsp_url }}">{{ cam.rtsp_url }}</td>
       <td>{{ cam.codec }}</td>
       <td>{{ cam.interval }}s</td>
@@ -405,11 +497,11 @@ _CAM_LIST = """
     </tr>
     {% endfor %}
     </tbody>
-  </table>
+  </table></div>
   {% else %}
   <div class="empty">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.5 4h-5L7 7H4a2 2 0 00-2 2v9a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
-    No cameras yet. <a href="/cameras/add" style="color:#388bfd">Add your first camera</a>.
+    No cameras yet. <a href="/cameras/add" style="color:var(--accent)">Add your first camera</a>.
   </div>
   {% endif %}
 </div>"""
@@ -483,7 +575,7 @@ _SETTINGS = """
         <div class="fhint">Recordings older than this many days will be automatically deleted.</div>
       </div>
       <hr class="div">
-      <h4 style="font-size:.875em;color:#7d8590;font-weight:600;margin-bottom:14px;text-transform:uppercase;letter-spacing:.04em">Daily Concatenation</h4>
+      <h4 style="font-size:.875em;color:var(--text-muted);font-weight:600;margin-bottom:14px;text-transform:uppercase;letter-spacing:.04em">Daily Concatenation</h4>
       <div class="cb">
         <input type="checkbox" id="concat" name="concatenation" {{ 'checked' if cfg.concatenation else '' }}>
         <label for="concat">Enable daily video concatenation</label>
@@ -531,9 +623,9 @@ _SETTINGS = """
       <button type="submit" class="btn btn-b">Change Password</button>
     </form>
     <hr class="div">
-    <p style="font-size:.75em;color:#7d8590;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Locked Out?</p>
-    <p style="font-size:.82em;color:#6e7681;margin-bottom:10px">If you cannot log in, use the Forgot Password link on the login page. The reset key is written to the container filesystem — read it with:</p>
-    <code style="display:block;background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:9px 12px;font-size:.78em;color:#7d8590;font-family:monospace">docker exec &lt;container_name&gt; cat /config/password_reset.key</code>
+    <p style="font-size:.75em;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">Locked Out?</p>
+    <p style="font-size:.82em;color:var(--text-dim);margin-bottom:10px">If you cannot log in, use the Forgot Password link on the login page. The reset key is written to the container filesystem — read it with:</p>
+    <code style="display:block;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-size:.78em;color:var(--text-muted);font-family:monospace">docker exec &lt;container_name&gt; cat /config/password_reset.key</code>
   </div>
 </div>"""
 
@@ -634,8 +726,8 @@ _LOGIN_TPL = """
     {% if ok %}<div class="alert alert-s">{{ ok }}</div>{% endif %}
     {% if reset_mode %}
       <div class="alert alert-s" style="margin-bottom:10px">A reset key has been written to<br><strong>/config/password_reset.key</strong></div>
-      <p style="font-size:.78em;color:#6e7681;margin-bottom:6px">Read it from your container (admin access required):</p>
-      <code style="display:block;background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:8px 11px;font-size:.72em;color:#7d8590;font-family:monospace;margin-bottom:14px;word-break:break-all">docker exec &lt;container&gt; cat /config/password_reset.key</code>
+      <p style="font-size:.78em;color:var(--text-dim);margin-bottom:6px">Read it from your container (admin access required):</p>
+      <code style="display:block;background:var(--bg);border:1px solid var(--border-subtle);border-radius:6px;padding:8px 11px;font-size:.72em;color:var(--text-muted);font-family:monospace;margin-bottom:14px;word-break:break-all">docker exec &lt;container&gt; cat /config/password_reset.key</code>
       <a href="/reset_password" class="btn btn-b" style="width:100%;justify-content:center;margin-bottom:10px">I have the reset key</a>
       <a href="/login" class="ll">Back to Login</a>
     {% elif reset_key_form %}

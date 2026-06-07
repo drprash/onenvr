@@ -36,7 +36,9 @@ Thumbs.db
 # Runtime data / secrets
 /config/*.dat
 /config/*.key
+/docs
 /storage/
+/.superpowers
 *.key
 *.dat
 *.env
