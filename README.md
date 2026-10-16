@@ -1,9 +1,9 @@
 # OneNVR - One Network Video Recorder
 
-[![Repo](https://img.shields.io/badge/Docker-Repo-007EC6?labelColor-555555&color-007EC6&logo=docker&logoColor=fff&style=flat-square)](https://hub.docker.com/r/cyb3rdoc/onenvr)
-[![Version](https://img.shields.io/docker/v/cyb3rdoc/onenvr/latest?labelColor-555555&color-007EC6&style=flat-square)](https://hub.docker.com/r/cyb3rdoc/onenvr)
-[![Size](https://img.shields.io/docker/image-size/cyb3rdoc/onenvr/latest?sort=semver&labelColor-555555&color-007EC6&style=flat-square)](https://hub.docker.com/r/cyb3rdoc/onenvr)
-[![Pulls](https://img.shields.io/docker/pulls/cyb3rdoc/onenvr?labelColor-555555&color-007EC6&style=flat-square)](https://hub.docker.com/r/cyb3rdoc/onenvr)
+[![Repo](https://img.shields.io/badge/Docker-Repo-007EC6?labelColor-555555&color-007EC6&logo=docker&logoColor=fff&style=flat-square)](https://hub.docker.com/r/drprash/onenvr)
+[![Version](https://img.shields.io/docker/v/drprash/onenvr/latest?labelColor-555555&color-007EC6&style=flat-square)](https://hub.docker.com/r/drprash/onenvr)
+[![Size](https://img.shields.io/docker/image-size/drprash/onenvr/latest?sort=semver&labelColor-555555&color-007EC6&style=flat-square)](https://hub.docker.com/r/drprash/onenvr)
+[![Pulls](https://img.shields.io/docker/pulls/drprash/onenvr?labelColor-555555&color-007EC6&style=flat-square)](https://hub.docker.com/r/drprash/onenvr)
 
 A lightweight, self-hosted Network Video Recorder (NVR) designed to run on modest hardware such as a Raspberry Pi with an attached drive. Records 24/7 RTSP streams from network cameras into segmented files with a built-in web interface for browsing, playback, and management.
 
