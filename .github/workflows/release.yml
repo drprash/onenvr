@@ -1,0 +1,59 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release tag to create (e.g. onenvr3.1)"
+        required: true
+        type: string
+      prerelease:
+        description: "Mark as pre-release"
+        required: false
+        type: boolean
+        default: false
+      draft:
+        description: "Create as draft (publish manually later)"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag
+        env:
+          TAG: ${{ inputs.version }}
+        run: |
+          if ! [[ "$TAG" =~ ^[A-Za-z0-9._-]+$ ]]; then
+            echo "::error::Invalid tag '$TAG' (allowed: letters, digits, '.', '_', '-')"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag '$TAG' already exists"
+            exit 1
+          fi
+
+      - name: Verify Docker image builds
+        run: docker build -t onenvr:release-check .
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.version }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          DRAFT: ${{ inputs.draft }}
+        run: |
+          args=("$TAG" --target "$GITHUB_SHA" --title "OneNVR $TAG" --generate-notes)
+          [[ "$PRERELEASE" == "true" ]] && args+=(--prerelease)
+          [[ "$DRAFT" == "true" ]] && args+=(--draft)
+          gh release create "${args[@]}"
